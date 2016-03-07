@@ -22,7 +22,7 @@ def insert_to_db(node,vrms,irms,frqy,pwrf,actp,reap,appp):
 #Parse and Convert
 
 def getData(hex, start, end, dtype):
-	data = (dtype==0)?int(hex[start:end],16):long(int(hex[start:end],16)/100)
+	data = int(hex[start:end],16) if (dtype==0) else long(int(hex[start:end],16)/100) #pseudo-ternary :p
 	return data;
 
 while True:
