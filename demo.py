@@ -7,11 +7,13 @@ import MySQLdb.cursors
 def insert_to_db(node,vrms,irms,frqy,pwrf,actp,reap,appp):
 	db = MySQLdb.connect("localhost","root","power","don")
 	cursor = db.cursor()
-	sql = "INSERT INTO `demo`.`data` (`indx`, `node`, `date`, `time`, `vrms`, `irms`, `freq`, `pwrf`, `actp`, `reap`, `appp`) VALUES (NULL, '%d', CURDATE(), CURTIME(), '%f', '%f', '%f', '%f', '%f', '%f', '%f')" % (node,vrms,irms,frqy,pwrf,actp,reap,appp)
+	sql = "INSERT INTO `demo`.`data` (`indx`, `node`, `date`, `time`, "\
+		  "`vrms`, `irms`, `freq`, `pwrf`, `actp`, `reap`, `appp`) VALUES "\
+		  "(NULL, '%d', CURDATE(), CURTIME(), '%f', '%f', '%f', '%f', '%f', '%f', '%f')"\
+		  % (node,vrms,irms,frqy,pwrf,actp,reap,appp)
 	try:
 		cursor.execute(sql)
 		db.commit()
-		print "NEW ROW INSERTED!"
 	except:
 		db.rollback()
 	db.close()
