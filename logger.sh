@@ -18,4 +18,4 @@ cd /home/pi
 
 #Java-Listen Pipe Output to Demo.py
 #Make sure to include full path to Interpreters java and python
-/usr/bin/java net.tinyos.tools.Listen -comm serial@/dev/ttyUSB0:telosb | /usr/bin/python demo.py
+/usr/bin/java net.tinyos.tools.Listen -comm serial@/dev/ttyUSB0:telosb | /usr/bin/python /home/pi/demo.py
