@@ -11,12 +11,12 @@ import MySQLdb
 import MySQLdb.cursors
 
 #DB Configuration. Change here according to spec.
-db = MySQLdb.connect("localhost","root","master","node_test")
+db = MySQLdb.connect("SERVER","USERNAME","PASSWORD","DB_NAME")
 cursor = db.cursor()
 
 #This is for single phase node data
 def insert_to_db(node,vrms,irms,frqy,pwrf,actp,reap,appp):
-	sql = "INSERT INTO `demo`.`data` (`indx`, `node`, `date`, `time`, "\
+	sql = "INSERT INTO `single_phase` (`indx`, `node`, `date`, `time`, "\
 		  "`vrms`, `irms`, `freq`, `pwrf`, `actp`, `reap`, `appp`) VALUES "\
 		  "(NULL, '%d', CURDATE(), CURTIME(), '%f', '%f', '%f', '%f', '%f', '%f', '%f')"\
 		  % (node,vrms,irms,frqy,pwrf,actp,reap,appp)
