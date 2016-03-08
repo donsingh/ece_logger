@@ -1,0 +1,6 @@
+#To be placed at the end of the 'sudo crontab -e' file.
+#This will make the file logger.sh run at startup saving error outputs to err.log
+
+@reboot . /home/pi/.bashrc
+@reboot . /home/pi/.tinyos.sh
+@reboot /home/pi/logger.sh 2>> /home/pi/err.log
