@@ -1,112 +1,99 @@
 #!/usr/bin/python
-
-#Author: 		Don Bhrayan M. Singh
-#Date: 			February 22,2016
-#Description:	Python Logger that accepts piped hex data and inserts into MySQL database
-
-#Notes: Remember to "sudo apt-get install python-mysqldb" to get MySQLdb to work!
 import sys
 import os
 import MySQLdb
 import MySQLdb.cursors
 
-#DB Configuration. Change here according to spec.
-db = MySQLdb.connect("SERVER","USERNAME","PASSWORD","DB_NAME")
-cursor = db.cursor()
-
-#This is for single phase node data
-def insert_to_db(node,vrms,irms,frqy,pwrf,actp,reap,appp):
-	sql = "INSERT INTO `single_phase` (`indx`, `node`, `date`, `time`, "\
-		  "`vrms`, `irms`, `freq`, `pwrf`, `actp`, `reap`, `appp`) VALUES "\
-		  "(NULL, '%d', CURDATE(), CURTIME(), '%f', '%f', '%f', '%f', '%f', '%f', '%f')"\
-		  % (node,vrms,irms,frqy,pwrf,actp,reap,appp)
+def insert_to_db_single_phase(node,vrms,irms,frqy,pwrf,actp,reap,appp):
+	db = MySQLdb.connect("localhost","root","master","node_data")
+	cursor = db.cursor()
+	sql = "INSERT INTO `single_phase` (`indx`, `node`, `date`, `time`, `vrms`, `irms`, `freq`, `pwrf`, `actp`, `reap`, `appp`) VALUES (NULL, '%d', CURDATE(), CURTIME(), '%f', '%f', '%f', '%f', '%f', '%f', '%f')" % (node,vrms,irms,frqy,pwrf,actp,reap,appp)
 	try:
 		cursor.execute(sql)
 		db.commit()
+		print "NEW ROW INSERTED!"
 	except:
 		db.rollback()
+	db.close()
 	return;
 
 def insert_to_db_three_phase(node,vrms1,irms1,actp1,vrms2,irms2,actp2,actpt):
-	sql = "INSERT INTO `three_phase` (`indx`, `node`, `date`, `time`, `vrms1`, "\
-	"`irms1`, `actp1`, `vrms2`, `irms2`, `actp2`, `actpt`) VALUES "\
-	"(NULL, '%d', CURDATE(), CURTIME(), '%f', '%f', '%f', '%f', '%f', '%f', '%f')"\
-	 % (node,vrms1,irms1,actp1,vrms2,irms2,actp2,actpt)
+	db = MySQLdb.connect("localhost","root","master","node_data")
+	cursor = db.cursor()
+	sql = "INSERT INTO `three_phase` (`indx`, `node`, `date`, `time`, `vrms1`, `irms1`, `actp1`, `vrms2`, `irms2`, `actp2`, `actpt`) VALUES (NULL, '%d', CURDATE(), CURTIME(), '%f', '%f', '%f', '%f', '%f', '%f', '%f')" % (node,vrms1,irms1,actp1,vrms2,irms2,actp2,actpt)
 	try:
 		cursor.execute(sql)
 		db.commit()
+		print "NEW ROW INSERTED!"
 	except:
 		db.rollback()
+	db.close()
 	return;
 
-#Parse and Convert
-#dType == 0 for normal convery, ==1 for decimal place calculation
-def getData(hex, start, end, dtype):
-	data = int(hex[start:end],16) if (dtype==0) else long(int(hex[start:end],16)/100) #pseudo-ternary :p
-	return data;
+def twos_comp(val, bits):
+    """compute the 2's compliment of int value val"""
+    if (val & (1 << (bits - 1))) != 0: # if sign bit is set e.g., 8bit: 128-255
+        val = val - (1 << bits)        # compute negative value
+    return val
 
-#reader
 while True:
-	#added Try-Catch to prevent python from reacting weirdly when stopped with Ctrl+C
-	try:
-		#Reading of Pipe Data from java net.tinyos.tools.Listen -comm serial@/dev/ttyUSB*:telosb
-		line = sys.stdin.readline()
-		if not line:
-			break
-		line = line.replace(" ", "")
-		node = getData(line,6,10,0)
+	line = sys.stdin.readline()
+	if not line:
+		break
+	line = line.replace(" ", "")
+	
+	#get NODE_ID
+	node = int(line[16:18],16)
+	print ("Node %s  LINE: %s")%(node,line)
+	if(node>0):#25 SAONA
+            #get VRMS values
+            vrms = int(line[18:20],16)
+            vrms += (float(int(line[20:22],16))/100)
+            #get IRMS values
+            irms = int(line[22:24],16)
+            irms += (float(int(line[24:26],16))/100)
+            #get FREQUENCY values
+            frqy = int(line[26:28],16)
+            frqy += (float(int(line[28:30],16))/100)
+            #get POWERFACTOR values
+            pwrf = int(line[30:32],16)
+            pwrf += (float(int(line[32:34],16))/100)
+            #get ACTP values
+            actp = int(line[34:38],16)
+            actp += (float(int(line[38:40],16))/100)
+            #get REAP values
+            reap = int(line[40:44],16)
+            if(reap>32767):
+                    reap = 65536 - reap
+            reap += (float(int(line[44:46],16))/100)
+            reap = 0 - reap
+            #get APPP values
+            appp = int(line[46:50],16)
+            appp += (float(int(line[50:52],16))/100)
+	    print vrms
+	    print irms
+	    print frqy
+            insert_to_db_single_phase(node,vrms,irms,frqy,pwrf,actp,reap,appp)
+	else:
+	    
+            vrms1 = int(line[18:20],16)
+            vrms1 += (float(int(line[20:22],16))/100)
+            
+            irms1 = int(line[22:24],16)
+            irms1 += (float(int(line[24:26],16))/100)
+            
+            actp1 = int(line[26:30],16)
+            actp1 += (float(int(line[30:32],16))/100)
+            
+            vrms2 = int(line[32:34],16)
+            vrms2 += (float(int(line[34:36],16))/100)
+            
+            irms2 = int(line[36:38],16)
+            irms2 += (float(int(line[38:40],16))/100)
+            
+            actp2 = int(line[40:44],16)
+            actp2 += (float(int(line[44:46],16))/100)
 
-		#print ("Node %s With Data: %d") % (node,getData(line,21,24,0))   #For Testing
-
-		if(node>25): #Single Phase
-			vrms = getData(line,18,20,0)
-			vrms +=getData(line,20,22,1)   #get VRMS values
-
-			irms = getData(line,22,24,0)
-			irms +=getData(line,24,26,1)   #get IRMS values
-
-			frqy = getData(line,26,28,0)
-			frqy +=getData(line,28,30,1)   #get FREQUENCY values
-
-			pwrf = getData(line,30,32,0)
-			pwrf +=getData(line,32,34,1)   #get POWERFACTOR values
-
-			actp = getData(line,34,38,0)
-			actp +=getData(line,38,40,1)   #get ACTP values
-
-			reap = getData(line,40,44,0)
-			reap +=getData(line,44,46,1)   #get REAP values
-
-			appp = getData(line,46,50,0)
-			appp +=getData(line,50,52,1)   #get APPP values
-
-			insert_to_db(node,vrms,irms,frqy,pwrf,actp,reap,appp) #INSERT FOR SINGLE PHASE
-
-		else: #added else statement for Three Phase
-
-			vrms1 = getData(18,20,0)
-			vrms1 +=getData(line,20,22,1)
-
-			irms1 = getData(22,24,0)
-			irms1 +=getData(line,24,26,1)
-
-			actp1 = getData(26,30,0)
-			actp1 +=getData(line,30,32,1)
-
-			vrms2 = getData(32,34,0)
-			vrms2 +=getData(line,34,36,1)
-
-			irms2 = getData(36,38,0)
-			irms2 +=getData(line,38,40,1)
-
-			actp2 = getData(40,44,0)
-			actp2 +=getData(line,44,46,1)
-
-			actpt = getData(46,50,0)
-			actpt +=getData(line,50,52,1)
-
-			insert_to_db_three_phase(node,vrms1,irms1,actp1,vrms2,irms2,actp2,actpt)
-
-	except KeyboardInterrupt:
-		db.close()
-		sys.exit()
+            actpt = int(line[46:50],16)
+            actpt += (float(int(line[50:52],16))/100)
+      	    insert_to_db_three_phase(node,vrms1,irms1,actp1,vrms2,irms2,actp2,actpt)
